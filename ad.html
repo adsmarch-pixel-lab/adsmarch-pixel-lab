@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>埋点测试实验室 · 进阶版</title>
+
+<!-- ============================================================
+     1. Google Tag Manager
+     ============================================================ -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+
+<!-- ============================================================
+     2. Google Analytics 4
+     ============================================================ -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', { send_page_view: false });  // 我们手动控制页面浏览
+</script>
+
+<!-- ============================================================
+     3. Meta Pixel
+     ============================================================ -->
+<script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', 'YOUR_PIXEL_ID');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f1f5f9; color: #0f172a; line-height: 1.6;
+    padding-bottom: 80px;
+  }
+
+  /* ===== 顶部导航 ===== */
+  header {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 0 24px; position: sticky; top: 0; z-index: 100;
+  }
+  nav {
+    max-width: 1100px; margin: 0 auto; display: flex;
+    align-items: center; gap: 4px; height: 60px;
+  }
+  nav .logo { font-weight: 800; font-size: 1.1rem; color: #0f172a; margin-right: 24px; }
+  nav .logo span { color: #6366f1; }
+  nav a {
+    padding: 8px 14px; border-radius: 8px; font-size: 0.9rem;
+    color: #475569; text-decoration: none; cursor: pointer;
+    font-weight: 500; transition: all .15s;
+  }
+  nav a:hover { background: #f1f5f9; color: #0f172a; }
+  nav a.active { background: #eef2ff; color: #4f46e5; }
+  nav .cart-btn {
+    margin-left: auto; background: #0f172a; color: #fff !important;
+    padding: 8px 16px; border-radius: 8px;
+  }
+  nav .cart-btn:hover { background: #1e293b; }
+
+  /* ===== 主区域 ===== */
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .view { display: none; animation: fadeIn .25s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h1 { font-size: 2rem; margin-bottom: 12px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.3rem; margin-bottom: 16px; }
+  .sub { color: #64748b; margin-bottom: 28px; }
+
+  /* ===== 按钮 ===== */
+  button {
+    padding: 10px 18px; border: none; border-radius: 8px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    transition: all .15s; font-family: inherit;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: #6366f1; color: #fff; }
+  .btn-primary:hover { background: #4f46e5; }
+  .btn-dark { background: #0f172a; color: #fff; }
+  .btn-dark:hover { background: #1e293b; }
+  .btn-ghost { background: #f1f5f9; color: #334155; }
+  .btn-ghost:hover { background: #e2e8f0; }
+  .btn-danger { background: #fee2e2; color: #b91c1c; }
+  .btn-danger:hover { background: #fecaca; }
+
+  /* ===== 首页 Hero ===== */
+  .hero {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff; padding: 48px 40px; border-radius: 16px;
+    margin-bottom: 40px;
+  }
+  .hero h1 { color: #fff; font-size: 2.2rem; }
+  .hero p { color: rgba(255,255,255,0.85); margin: 12px 0 24px; font-size: 1rem; }
+  .hero .search-box {
+    display: flex; gap: 8px; max-width: 480px;
+  }
+  .hero .search-box input {
+    flex: 1; padding: 12px 16px; border: none; border-radius: 8px;
+    font-size: 0.95rem; font-family: inherit;
+  }
+  .hero .search-box button { background: #0f172a; color: #fff; }
+
+  /* ===== 商品网格 ===== */
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .product-card {
+    background: #fff; border-radius: 12px; overflow: hidden;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+  .product-card .thumb {
+    height: 160px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+  }
+  .product-card .info { padding: 16px; }
+  .product-card .name { font-weight: 700; margin-bottom: 4px; }
+  .product-card .price { color: #6366f1; font-weight: 700; font-size: 1.1rem; }
+  .product-card .tag { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ===== 商品详情 ===== */
+  .detail-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .detail-thumb {
+    height: 380px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 6rem;
+  }
+  .detail-info h1 { font-size: 1.8rem; margin-bottom: 8px; }
+  .detail-info .price { font-size: 2rem; color: #6366f1; font-weight: 800; margin: 16px 0; }
+  .detail-info .desc { color: #475569; margin-bottom: 24px; }
+  .detail-info .actions { display: flex; gap: 12px; }
+
+  /* ===== 购物车 ===== */
+  .cart-item {
+    background: #fff; border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px; margin-bottom: 12px;
+  }
+  .cart-item .emoji { font-size: 2rem; }
+  .cart-item .meta { flex: 1; }
+  .cart-item .meta .name { font-weight: 700; }
+  .cart-item .meta .price { color: #64748b; font-size: 0.9rem; }
+  .cart-item .qty { display: flex; align-items: center; gap: 8px; }
+  .cart-item .qty button { width: 30px; height: 30px; padding: 0; background: #f1f5f9; color: #334155; }
+  .cart-summary {
+    background: #fff; border-radius: 12px; padding: 24px;
+    margin-top: 24px;
+  }
+  .cart-summary .row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+  .cart-summary .total { font-size: 1.4rem; font-weight: 800; color: #0f172a; border-top: 2px solid #f1f5f9; padding-top: 12px; }
+
+  /* ===== 表单 ===== */
+  .form-card { background: #fff; border-radius: 12px; padding: 32px; max-width: 480px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0;
+    border-radius: 8px; font-size: 0.95rem; font-family: inherit;
+    transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none; border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+
+  /* ===== 视频 ===== */
+  .video-card {
+    background: #0f172a; border-radius: 16px; overflow: hidden;
+    margin-bottom: 40px;
+  }
+  .video-card .label {
+    color: #94a3b8; font-size: 0.8rem; padding: 12px 20px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .video-card video { width: 100%; display: block; }
+
+  /* ===== 追踪工具区 ===== */
+  .tools-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .tool-card {
+    background: #fff; border-radius: 12px; padding: 20px;
+    border: 1px solid #e2e8f0;
+  }
+  .tool-card h3 { font-size: 1rem; margin-bottom: 8px; }
+  .tool-card p { font-size: 0.85rem; color: #64748b; margin-bottom: 14px; }
+
+  /* ===== 事件日志面板 ===== */
+  #event-log {
+    position: fixed; bottom: 0; right: 0; left: 0;
+    background: #0f172a; color: #e2e8f0;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    z-index: 200;
+    transform: translateY(calc(100% - 44px));
+    transition: transform .3s ease;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  }
+  #event-log.expanded { transform: translateY(0); }
+  #event-log .handle {
+    height: 44px; padding: 0 20px; display: flex; align-items: center;
+    gap: 12px; cursor: pointer; background: #1e293b;
+    border-bottom: 1px solid #334155;
+  }
+  #event-log .handle .title { font-weight: 700; color: #fff; font-family: inherit; }
+  #event-log .handle .count {
+    background: #6366f1; color: #fff; padding: 2px 8px;
+    border-radius: 10px; font-size: 0.7rem;
+  }
+  #event-log .handle .clear {
+    margin-left: auto; background: #334155; color: #cbd5e1;
+    padding: 4px 12px; font-size: 0.75rem; border-radius: 6px;
+  }
+  #event-log .entries {
+    max-height: 260px; overflow-y: auto; padding: 8px 0;
+  }
+  #event-log .entry {
+    padding: 8px 20px; border-bottom: 1px solid #1e293b;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  #event-log .entry .time { color: #64748b; flex-shrink: 0; }
+  #event-log .entry .platform {
+    flex-shrink: 0; padding: 1px 8px; border-radius: 4px;
+    font-size: 0.7rem; font-weight: 700;
+  }
+  #event-log .entry .platform.ga4 { background: #dbeafe; color: #1e40af; }
+  #event-log .entry .platform.meta { background: #dbeafe; color: #1d4ed8; }
+  #event-log .entry .platform.gtm { background: #fef3c7; color: #b45309; }
+  #event-log .entry .platform.event { background: #dcfce7; color: #15803d; }
+  #event-log .entry .body { flex: 1; word-break: break-all; }
+  #event-log .entry .name { color: #7dd3fc; font-weight: 700; }
+  #event-log .entry .params { color: #94a3b8; }
+
+  @media (max-width: 720px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .hero { padding: 32px 24px; }
+  }
+</style>
+</head>
+
+<body>
+<!-- GTM noscript -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ===== 顶部导航 ===== -->
+<header>
+  <nav>
+    <div class="logo">Pixel<span>Lab</span></div>
+    <a data-nav="home" class="active">首页</a>
+    <a data-nav="products">商品</a>
+    <a data-nav="tools">追踪工具</a>
+    <a data-nav="signup">注册</a>
+    <a class="cart-btn" data-nav="cart">🛒 购物车 <span id="cart-count">0</span></a>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ 视图：首页 ============ -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <h1>埋点实战练习场</h1>
+      <p>这里模拟一个完整的电商漏斗：浏览商品 → 查看详情 → 加入购物车 → 结算下单。每一步都会触发埋点，用右侧的调试面板实时观察。</p>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="搜索商品，比如「耳机」...">
+        <button onclick="doSearch()">搜索</button>
+      </div>
+    </div>
+
+    <h2>🔥 热销商品</h2>
+    <div class="grid" id="featured-grid"></div>
+  </section>
+
+  <!-- ============ 视图：全部商品 ============ -->
+  <section class="view" id="view-products">
+    <h1>全部商品</h1>
+    <p class="sub">点击任意商品查看详情，会触发 <code>view_item</code> 事件。</p>
+    <div class="grid" id="products-grid"></div>
+  </section>
+
+  <!-- ============ 视图：商品详情 ============ -->
+  <section class="view" id="view-detail">
+    <button class="btn-ghost" style="margin-bottom:20px" onclick="navigate('products')">← 返回商品列表</button>
+    <div class="detail-layout">
+      <div class="detail-thumb" id="detail-emoji">🎧</div>
+      <div class="detail-info">
+        <div class="tag" style="color:#94a3b8;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em" id="detail-tag">AUDIO</div>
+        <h1 id="detail-name">商品名称</h1>
+        <div class="price" id="detail-price">¥0</div>
+        <p class="desc" id="detail-desc">商品描述</p>
+        <div class="actions">
+          <button class="btn-primary" onclick="addToCartFromDetail()">加入购物车</button>
+          <button class="btn-dark" onclick="buyNowFromDetail()">立即购买</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：购物车 ============ -->
+  <section class="view" id="view-cart">
+    <h1>购物车</h1>
+    <p class="sub">修改数量会触发 <code>remove_from_cart</code>，点击结算进入漏斗下一步。</p>
+    <div id="cart-list"></div>
+    <div class="cart-summary" id="cart-summary" style="display:none">
+      <div class="row"><span>商品小计</span><span id="subtotal">¥0</span></div>
+      <div class="row"><span>运费</span><span>¥0</span></div>
+      <div class="row total"><span>总计</span><span id="total">¥0</span></div>
+      <button class="btn-primary" style="width:100%;margin-top:16px" onclick="beginCheckout()">去结算</button>
+    </div>
+    <div id="cart-empty" style="text-align:center;padding:60px 0;color:#94a3b8">
+      <div style="font-size:4rem;margin-bottom:12px">🛒</div>
+      <p>购物车是空的，去<a style="color:#6366f1;cursor:pointer;font-weight:600" onclick="navigate('products')">逛逛商品</a>吧</p>
+    </div>
+  </section>
+
+  <!-- ============ 视图：结算 ============ -->
+  <section class="view" id="view-checkout">
+    <h1>结算</h1>
+    <p class="sub">填写地址 → 选择支付方式 → 完成下单，三个步骤都会触发独立事件。</p>
+    <div class="form-card">
+      <div class="form-group">
+        <label>收件人姓名</label>
+        <input type="text" id="checkout-name" placeholder="张三" onfocus="trackFormStart('checkout')">
+      </div>
+      <div class="form-group">
+        <label>联系电话</label>
+        <input type="tel" id="checkout-phone" placeholder="13800138000">
+      </div>
+      <div class="form-group">
+        <label>收货地址</label>
+        <input type="text" id="checkout-address" placeholder="上海市浦东新区xxx路xxx号">
+      </div>
+      <div class="form-group">
+        <label>支付方式</label>
+        <select id="checkout-payment">
+          <option value="alipay">支付宝</option>
+          <option value="wechat">微信支付</option>
+          <option value="card">银行卡</option>
+        </select>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="placeOrder()">确认下单</button>
+    </div>
+  </section>
+
+  <!-- ============ 视图：注册 ============ -->
+  <section class="view" id="view-signup">
+    <h1>注册账号</h1>
+    <p class="sub">测试表单分步追踪：开始填写、字段完成、提交成功，三种事件分别触发。</p>
+    <div class="form-card">
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" onfocus="trackFormStart('signup')">
+      </div>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="signup-name" placeholder="your_handle">
+      </div>
+      <div class="form-group">
+        <label>套餐</label>
+        <select id="signup-plan">
+          <option value="free">免费版</option>
+          <option value="pro">专业版 ¥99/月</option>
+          <option value="enterprise">企业版 ¥999/月</option>
+        </select>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="submitSignup()">注册</button>
+    </div>
+  </section>
+
+  <!-- ============ 视图：追踪工具 ============ -->
+  <section class="view" id="view-tools">
+    <h1>追踪工具</h1>
+    <p class="sub">下面这些场景在实际业务中很常见，用来练习事件参数设计。</p>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <h3>📤 文件下载</h3>
+        <p>追踪用户下载产品白皮书的行为</p>
+        <button class="btn-ghost" onclick="trackDownload('whitepaper.pdf')">下载白皮书</button>
+      </div>
+      <div class="tool-card">
+        <h3>🔗 外链点击</h3>
+        <p>追踪用户跳转到合作方网站</p>
+        <button class="btn-ghost" onclick="trackOutbound('https://www.google.com')">访问合作方</button>
+      </div>
+      <div class="tool-card">
+        <h3>📞 联系客服</h3>
+        <p>追踪用户点击电话/微信的行为</p>
+        <button class="btn-ghost" onclick="trackContact('phone')">拨打客服电话</button>
+      </div>
+      <div class="tool-card">
+        <h3>⭐ 商品收藏</h3>
+        <p>追踪用户加入收藏夹的行为</p>
+        <button class="btn-ghost" onclick="trackWishlist()">加入收藏</button>
+      </div>
+      <div class="tool-card">
+        <h3>🎯 CTA 按钮</h3>
+        <p>通过 dataLayer 推送自定义事件</p>
+        <button class="btn-ghost" onclick="trackCta('hero')">点击 CTA</button>
+      </div>
+      <div class="tool-card">
+        <h3>🎬 视频播放</h3>
+        <p>追踪视频开始播放、进度节点</p>
+        <button class="btn-ghost" onclick="navigate('home');document.getElementById('demo-video').scrollIntoView({behavior:'smooth'})">去播放视频</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== 事件日志面板 ===== -->
+<div id="event-log">
+  <div class="handle" onclick="document.getElementById('event-log').classList.toggle('expanded')">
+    <span class="title">📡 事件日志</span>
+    <span class="count" id="log-count">0</span>
+    <button class="clear" onclick="event.stopPropagation();clearLog()">清空</button>
+  </div>
+  <div class="entries" id="log-entries">
+    <div class="entry" style="color:#64748b;padding:16px 20px">
+      等待事件触发... 点击页面上任意按钮看看。
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   数据：商品列表
+   ============================================================ */
+const PRODUCTS = [
+  { id: 'SKU_001', name: '无线降噪耳机', price: 899, emoji: '🎧', tag: 'audio',  desc: '主动降噪，40小时续航，适合通勤和办公。' },
+  { id: 'SKU_002', name: '机械键盘',     price: 599, emoji: '⌨️', tag: 'input',  desc: '客制化轴体，全键热插拔，RGB 背光。' },
+  { id: 'SKU_003', name: '人体工学椅',   price: 2299, emoji: '🪑', tag: 'furniture', desc: '腰部支撑，全网面透气，久坐不累。' },
+  { id: 'SKU_004', name: '27寸 4K 显示器', price: 1899, emoji: '🖥️', tag: 'display', desc: '广色域，Type-C 一线连，适合设计师。' },
+  { id: 'SKU_005', name: '无线鼠标',     price: 299, emoji: '🖱️', tag: 'input',  desc: '轻量化设计，静音微动，续航 70 天。' },
+  { id: 'SKU_006', name: '桌面音箱',     price: 799, emoji: '🔊', tag: 'audio',  desc: '2.0 声道，木质箱体，音质细腻。' },
+];
+
+/* ============================================================
+   全局状态
+   ============================================================ */
+let cart = [];              // [{id, name, price, emoji, qty}]
+let currentProduct = null;  // 当前详情页商品
+let scrollMilestones = [25, 50, 75, 100];
+let scrollFired = new Set();
+let videoMilestones = [25, 50, 75, 100];
+let videoFired = new Set();
+let formStarted = new Set();
+
+/* ============================================================
+   事件日志（调试面板）
+   ============================================================ */
+let logCount = 0;
+function pushLog(platform, name, params) {
+  logCount++;
+  document.getElementById('log-count').textContent = logCount;
+
+  const entries = document.getElementById('log-entries');
+  if (logCount === 1) entries.innerHTML = ''; // 清掉占位文字
+
+  const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const paramStr = params ? JSON.stringify(params) : '';
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `
+    <span class="time">${time}</span>
+    <span class="platform ${platform.toLowerCase()}">${platform}</span>
+    <span class="body">
+      <span class="name">${name}</span>
+      ${paramStr ? `<span class="params"> ${paramStr}</span>` : ''}
+    </span>
+  `;
+  entries.insertBefore(entry, entries.firstChild);
+
+  // 自动展开一次，让学员看到有事件在触发
+  document.getElementById('event-log').classList.add('expanded');
+}
+
+function clearLog() {
+  logCount = 0;
+  document.getElementById('log-count').textContent = '0';
+  document.getElementById('log-entries').innerHTML =
+    '<div class="entry" style="color:#64748b;padding:16px 20px">已清空。点击页面上任意按钮看看。</div>';
+}
+
+/* ============================================================
+   埋点封装（同时通知日志面板）
+   ============================================================ */
+function trackGA4(eventName, params) {
+  if (typeof gtag === 'function') {
+    gtag('event', eventName, params || {});
+  }
+  pushLog('GA4', eventName, params);
+}
+
+function trackMeta(eventName, params) {
+  if (typeof fbq === 'function') {
+    fbq('track', eventName, params || {});
+  }
+  pushLog('Meta', eventName, params);
+}
+
+function trackDataLayer(eventName, params) {
+  window.dataLayer = window.dataLayer || [];
+  const payload = Object.assign({ event: eventName }, params || {});
+  window.dataLayer.push(payload);
+  pushLog('GTM', eventName, params);
+}
+
+/* ============================================================
+   路由 / 视图切换
+   ============================================================ */
+function navigate(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => {
+    a.classList.toggle('active', a.dataset.nav === view);
+  });
+
+  // 虚拟页面浏览事件
+  const pageTitles = {
+    home: '首页',
+    products: '全部商品',
+    detail: currentProduct ? currentProduct.name : '商品详情',
+    cart: '购物车',
+    checkout: '结算',
+    signup: '注册',
+    tools: '追踪工具'
+  };
+  const title = pageTitles[view] || view;
+  trackGA4('page_view', { page_title: title, page_path: '/' + view });
+  pushLog('EVENT', 'virtual_page_view', { page: view });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (view === 'cart') renderCart();
+}
+
+// 绑定导航
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', () => navigate(a.dataset.nav));
+});
+
+/* ============================================================
+   商品渲染
+   ============================================================ */
+function productCardHTML(p) {
+  return `
+    <div class="product-card" onclick="openProduct('${p.id}')">
+      <div class="thumb">${p.emoji}</div>
+      <div class="info">
+        <div class="tag">${p.tag}</div>
+        <div class="name">${p.name}</div>
+        <div class="price">¥${p.price}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderProducts() {
+  document.getElementById('featured-grid').innerHTML =
+    PRODUCTS.slice(0, 3).map(productCardHTML).join('');
+  document.getElementById('products-grid').innerHTML =
+    PRODUCTS.map(productCardHTML).join('');
+}
+renderProducts();
+
+/* ============================================================
+   商品详情
+   ============================================================ */
+function openProduct(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  currentProduct = p;
+
+  document.getElementById('detail-emoji').textContent = p.emoji;
+  document.getElementById('detail-tag').textContent = p.tag;
+  document.getElementById('detail-name').textContent = p.name;
+  document.getElementById('detail-price').textContent = '¥' + p.price;
+  document.getElementById('detail-desc').textContent = p.desc;
+
+  navigate('detail');
+
+  // view_item 事件
+  trackGA4('view_item', {
+    currency: 'CNY',
+    value: p.price,
+    items: [{ item_id: p.id, item_name: p.name, price: p.price }]
+  });
+  trackMeta('ViewContent', {
+    content_ids: [p.id],
+    content_name: p.name,
+    content_type: 'product',
+    value: p.price,
+    currency: 'CNY'
+  });
+}
+
+/* ============================================================
+   购物车
+   ============================================================ */
+function addToCart(product, qty = 1) {
+  const existing = cart.find(i => i.id === product.id);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    cart.push({ ...product, qty });
+  }
+  updateCartCount();
+  renderCart();
+
+  trackGA4('add_to_cart', {
+    currency: 'CNY',
+    value: product.price * qty,
+    items: [{ item_id: product.id, item_name: product.name, price: product.price, quantity: qty }]
+  });
+  trackMeta('AddToCart', {
+    content_ids: [product.id],
+    content_name: product.name,
+    content_type: 'product',
+    value: product.price * qty,
+    currency: 'CNY'
+  });
+  pushLog('EVENT', 'cart_updated', { total_items: cart.reduce((s, i) => s + i.qty, 0) });
+}
+
+function addToCartFromDetail() {
+  if (currentProduct) addToCart(currentProduct, 1);
+}
+
+function buyNowFromDetail() {
+  if (currentProduct) {
+    addToCart(currentProduct, 1);
+    beginCheckout();
+  }
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.id !== id);
+    trackGA4('remove_from_cart', {
+      currency: 'CNY',
+      value: item.price,
+      items: [{ item_id: item.id, item_name: item.name, price: item.price }]
+    });
+    pushLog('EVENT', 'item_removed', { id: item.id });
+  } else {
+    trackGA4('add_to_cart', {
+      currency: 'CNY',
+      value: item.price * item.qty,
+      items: [{ item_id: item.id, item_name: item.name, price: item.price, quantity: item.qty }]
+    });
+  }
+  updateCartCount();
+  renderCart();
+}
+
+function updateCartCount() {
+  document.getElementById('cart-count').textContent =
+    cart.reduce((s, i) => s + i.qty, 0);
+}
+
+function renderCart() {
+  const listEl = document.getElementById('cart-list');
+  const summaryEl = document.getElementById('cart-summary');
+  const emptyEl = document.getElementById('cart-empty');
+
+  if (cart.length === 0) {
+    listEl.innerHTML = '';
+    summaryEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  summaryEl.style.display = 'block';
+
+  listEl.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="emoji">${item.emoji}</div>
+      <div class="meta">
+        <div class="name">${item.name}</div>
+        <div class="price">¥${item.price} × ${item.qty}</div>
+      </div>
+      <div class="qty">
+        <button onclick="changeQty('${item.id}', -1)">−</button>
+        <span>${item.qty}</span>
+        <button onclick="changeQty('${item.id}', 1)">+</button>
+      </div>
+      <button class="btn-danger" onclick="changeQty('${item.id}', -999)">删除</button>
+    </div>
+  `).join('');
+
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  document.getElementById('subtotal').textContent = '¥' + total;
+  document.getElementById('total').textContent = '¥' + total;
+}
+
+/* ============================================================
+   结算
+   ============================================================ */
+function beginCheckout() {
+  if (cart.length === 0) { alert('购物车是空的'); return; }
+
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  trackGA4('begin_checkout', {
+    currency: 'CNY',
+    value: total,
+    items: cart.map(i => ({ item_id: i.id, item_name: i.name, price: i.price, quantity: i.qty }))
+  });
+  trackMeta('InitiateCheckout', {
+    value: total,
+    currency: 'CNY',
+    num_items: cart.reduce((s, i) => s + i.qty, 0)
+  });
+  navigate('checkout');
+}
+
+function trackFormStart(formName) {
+  if (formStarted.has(formName)) return;
+  formStarted.add(formName);
+  trackGA4('form_start', { form_name: formName });
+}
+
+function placeOrder() {
+  const name = document.getElementById('checkout-name').value.trim();
+  const phone = document.getElementById('checkout-phone').value.trim();
+  const address = document.getElementById('checkout-address').value.trim();
+
+  if (!name || !phone || !address) {
+    alert('请填写完整的收件信息');
+    return;
+  }
+
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const payment = document.getElementById('checkout-payment').value;
+  const orderId = 'ORD_' + Date.now();
+
+  // add_payment_info
+  trackGA4('add_payment_info', {
+    currency: 'CNY',
+    value: total,
+    payment_type: payment
+  });
+
+  // purchase
+  trackGA4('purchase', {
+    transaction_id: orderId,
+    currency: 'CNY',
+    value: total,
+    payment_type: payment,
+    items: cart.map(i => ({ item_id: i.id, item_name: i.name, price: i.price, quantity: i.qty }))
+  });
+  trackMeta('Purchase', {
+    value: total,
+    currency: 'CNY',
+    num_items: cart.reduce((s, i) => s + i.qty, 0),
+    content_ids: cart.map(i => i.id)
+  });
+  trackDataLayer('order_complete', { order_id: orderId, value: total });
+
+  alert(`✅ 下单成功！\n订单号：${orderId}\n金额：¥${total}\n\n（这是模拟订单，不会真实扣款）`);
+
+  cart = [];
+  updateCartCount();
+  renderCart();
+  navigate('home');
+}
+
+/* ============================================================
+   注册表单
+   ============================================================ */
+function submitSignup() {
+  const email = document.getElementById('signup-email').value.trim();
+  const name = document.getElementById('signup-name').value.trim();
+  const plan = document.getElementById('signup-plan').value;
+
+  if (!email || !name) { alert('请填写邮箱和用户名'); return; }
+
+  trackGA4('sign_up', { method: 'email', plan });
+  trackMeta('CompleteRegistration', { value: plan === 'free' ? 0 : 99, currency: 'CNY' });
+  trackDataLayer('user_signup', { plan, has_email: true });
+
+  alert(`✅ 注册成功！\n邮箱：${email}\n套餐：${plan}\n\n（这是模拟注册）`);
+}
+
+/* ============================================================
+   搜索
+   ============================================================ */
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const results = PRODUCTS.filter(p =>
+    p.name.includes(q) || p.tag.includes(q.toLowerCase())
+  );
+  trackGA4('search', { search_term: q, results_count: results.length });
+  pushLog('EVENT', 'search_done', { term: q, count: results.length });
+
+  document.getElementById('products-grid').innerHTML =
+    results.length ? results.map(productCardHTML).join('')
+                   : '<p style="color:#94a3b8">没有匹配的商品</p>';
+  navigate('products');
+}
+
+/* ============================================================
+   追踪工具
+   ============================================================ */
+function trackDownload(file) {
+  trackGA4('file_download', { file_name: file, file_type: 'pdf' });
+  trackMeta('Lead', { content_name: file });
+  alert('📥 模拟下载：' + file + '\n\n真实场景中这里会开始文件下载。');
+}
+
+function trackOutbound(url) {
+  trackGA4('click', { outbound: true, link_url: url });
+  trackDataLayer('outbound_click', { url });
+  alert('🔗 模拟跳转至：' + url + '\n\n（培训环境中不会真的跳走）');
+}
+
+function trackContact(method) {
+  trackGA4('contact', { method });
+  trackMeta('Contact', {});
+}
+
+function trackWishlist() {
+  const p = currentProduct || PRODUCTS[0];
+  trackGA4('add_to_wishlist', {
+    currency: 'CNY', value: p.price,
+    items: [{ item_id: p.id, item_name: p.name, price: p.price }]
+  });
+  trackMeta('AddToWishlist', { content_ids: [p.id], value: p.price, currency: 'CNY' });
+}
+
+function trackCta(location) {
+  trackDataLayer('cta_click', { cta_location: location, cta_text: '立即了解' });
+  // 提示学员：这个事件需要在 GTM 中配置对应标签才会进入 GA4
+}
+
+/* ============================================================
+   滚动深度追踪
+   ============================================================ */
+let scrollTicking = false;
+window.addEventListener('scroll', () => {
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop + window.innerHeight) / h.scrollHeight * 100;
+    scrollMilestones.forEach(m => {
+      if (scrolled >= m && !scrollFired.has(m)) {
+        scrollFired.add(m);
+        trackGA4('scroll', { percent_scrolled: m });
+      }
+    });
+    scrollTicking = false;
+  });
+});
+
+/* ============================================================
+   视频互动追踪
+   ============================================================ */
+// 用一段公开的示例视频，替换成你自己的也行
+const VIDEO_SRC = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+// 动态插入视频卡片到首页 hero 下方
+(function insertVideoCard() {
+  const homeView = document.getElementById('view-home');
+  const grid = homeView.querySelector('h2');
+  const card = document.createElement('div');
+  card.className = 'video-card';
+  card.style.marginBottom = '40px';
+  card.innerHTML = `
+    <div class="label">🎬 视频互动追踪演示</div>
+    <video id="demo-video" controls preload="metadata">
+      <source src="${VIDEO_SRC}" type="video/mp4">
+    </video>
+  `;
+  homeView.insertBefore(card, grid);
+
+  const video = document.getElementById('demo-video');
+  let started = false;
+
+  video.addEventListener('play', () => {
+    if (!started) {
+      started = true;
+      trackGA4('video_start', { video_title: 'BigBuckBunny', video_provider: 'local' });
+      trackMeta('ViewContent', { content_name: 'BigBuckBunny', content_type: 'video' });
+    } else {
+      trackGA4('video_play', { video_title: 'BigBuckBunny' });
+    }
+  });
+
+  video.addEventListener('pause', () => {
+    if (!video.ended) trackGA4('video_pause', { video_title: 'BigBuckBunny', current_time: Math.round(video.currentTime) });
+  });
+
+  video.addEventListener('ended', () => {
+    trackGA4('video_complete', { video_title: 'BigBuckBunny' });
+  });
+
+  video.addEventListener('timeupdate', () => {
+    if (!video.duration) return;
+    const pct = video.currentTime / video.duration * 100;
+    videoMilestones.forEach(m => {
+      if (pct >= m && !videoFired.has(m)) {
+        videoFired.add(m);
+        trackGA4('video_progress', { video_title: 'BigBuckBunny', percent: m });
+      }
+    });
+  });
+})();
+
+/* ============================================================
+   初始化：首页默认页面浏览
+   ============================================================ */
+window.addEventListener('load', () => {
+  trackGA4('page_view', { page_title: '首页', page_path: '/' });
+  trackMeta('PageView', {});
+  pushLog('EVENT', 'lab_ready', { products: PRODUCTS.length });
+});
+</script>
+</body>
+</html>
